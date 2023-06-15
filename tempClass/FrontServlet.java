@@ -9,8 +9,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import etu2090.framework.annotation.Url;
+import java.lang.reflect.Field;
 import etu2090.framework.ModelViews.ModelView;
 import java.io.File;
+import java.util.Enumeration;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
@@ -19,6 +21,8 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.sql.*;
+import java.text.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.RequestDispatcher;
@@ -44,6 +48,17 @@ public class FrontServlet extends HttpServlet {
      public void setViewsDirectory(String viewsDirectory) {
          this.viewsDirectory = viewsDirectory;
      }
+
+
+     public String makeUpperCaseInitialLetter(String name) {
+        if (name == null || name.isEmpty()) {
+            return name;
+        }
+        return Character.toUpperCase(name.charAt(0)) + name.substring(1);
+    }
+   
+
+
     /**
      * Initialise la servlet.
      * @param config
@@ -67,39 +82,76 @@ public class FrontServlet extends HttpServlet {
 
     
     @SuppressWarnings("empty-statement")
-    public void processRequest(HttpServletRequest req, HttpServletResponse resp) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException, InvocationTargetException, ServletException {
+    public void processRequest(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        //IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException, InvocationTargetException, ServletException
         PrintWriter out=resp.getWriter();
         String url=req.getRequestURI();
         String page=url.substring(url.lastIndexOf("/")+1);
         
-        
-       // Mapping mapping = this.getMappingUrls().get(page);
-        
+
       for(Map.Entry<String, Mapping> entry : this.mappingUrls.entrySet()) 
             {
                String key = entry.getKey();
                 Mapping mai = entry.getValue();
-                out.print(page);
-                //out.println("valeur de url    " + key + "     " + "    Nom de la classe qui a l'annotation       " + mai.getClassName() + "       " + "      methodes qui a l'annotation  " + mai.getMethod()); 
+                
+                /*out.println("valeur de url    " + key + "     " + "    Nom de la classe qui a l'annotation       " + mai.getClassName() + "       " + "      methodes qui a l'annotation  " + mai.getMethod());
+                out.println(page);
+                out.println(key);*/
             if (key.compareTo(page)==0) {
                 
                 try {
                     PrintWriter oPrintWriter=resp.getWriter();
                     Class<?> class1=Class.forName(packages+"."+mai.getClassName());
                     Object object=class1.newInstance();
-              //      oPrintWriter.println(class1.getName());
+                   Method method=object.getClass().getMethod(mai.getMethod());
 
-                    Method method=object.getClass().getMethod(mai.getMethod());
-            //        oPrintWriter.println(method.getName());
-                    ModelView view=(ModelView)method.invoke(object);
-                    String modelString="WEB-INF/views/"+view.getView();
+                 //  oPrintWriter.println("test");
+
+
+                        //recupere les attributs de la classe
+                        Field[] field = object.getClass().getDeclaredFields();
+
+                        //les transformer en tableau de string pour la comparaison
+                        String[] attributs = new String[field.length];
+                        for(int j=0;j<field.length;j++)
+                        {
+                            attributs[j] = field[j].getName();
+                            /*oPrintWriter.println("attribut classe");
+                            oPrintWriter.print(attributs[j]);*/
+                        }
+
+
+                  // Parcourir tous les paramètres et les valeurs du formulaire
+                   Enumeration<String> paramNames = req.getParameterNames();
+                   while (paramNames.hasMoreElements()) {
+                   String paramName = paramNames.nextElement();
+                    /*  out.println(paramName);
+                     out.print("trueeeeee");*/
+                     
+                     //Verifier si le parametre fait partie des attributs de la classe 
+                     for(int j=0;j<attributs.length;j++)
+                     {
+                         if(attributs[j].compareTo(paramName)==0)
+                         {
+                             String[] paramValues = req.getParameterValues(paramName);
+                             Method met= object.getClass().getMethod("set"+attributs[j], field[j].getType());
+                             Object paramValue = convertParamValue(paramValues[0], field[j].getType());
+                             met.invoke(object,paramValue);
+                         }
+                         
+                     }
+
+                   }
+                    /*Map<String, String[]> params = req.getParameterMap();
+                    for(Map.Entry<String, String[]> param : params.entrySet()) {
+                        Field attr = object.getClass().getField(param.getKey());
+                       object.getClass().getMethod("set"+this.makeUpperCaseInitialLetter(param.getKey()), attr.getType()).invoke(object, attr.getType().cast(param.getValue()[0]));
+                    }*/
+
+
+                ModelView view=(ModelView)method.invoke(object);
+                    String modelString="views/"+view.getView();
                     Map<String, Object> data = view.getData();
-                   /*for(Map.Entry<String, Mapping> dEntry : this.mappingUrls.entrySet())
-                   {
-                      // req.setAttribute(dEntry.getKey(),dEntry.getValue());
-                       req.setAttribute("test1", data);
-                      // oPrintWriter.println(dEntry.getValue());
-                   }*/
                    for (Map.Entry<String,Object> dEntry: view.getData().entrySet()) {
                     String k=dEntry.getKey();
                     Object o=dEntry.getValue();
@@ -107,8 +159,7 @@ public class FrontServlet extends HttpServlet {
                    }
                  RequestDispatcher dispatcher = req.getRequestDispatcher(modelString);
                    dispatcher.forward(req, resp);                   
-                
-                } catch (NoSuchMethodException | SecurityException | ClassNotFoundException | IllegalAccessException | InstantiationException | IllegalArgumentException | InvocationTargetException e) {
+                }catch(Exception e){
                     out.println(e.getMessage());
                 
                 }
@@ -126,10 +177,12 @@ public class FrontServlet extends HttpServlet {
         try {
             try {
                 processRequest(request, response);
-            } catch (InstantiationException | IllegalAccessException | InvocationTargetException ex) {
+            }catch(Exception ex){
+           // } catch (InstantiationException | IllegalAccessException | InvocationTargetException ex) {
                 Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
             }
-        } catch (URISyntaxException | ClassNotFoundException ex) {
+        }catch(Exception ex){
+        //} catch (URISyntaxException | ClassNotFoundException ex) {
             Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -139,10 +192,12 @@ public class FrontServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws javax.servlet.ServletException, IOException {
         try {
             processRequest(request, response);
-        } catch (URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | InvocationTargetException ex) {
+        }catch(Exception ex){
+      //  } catch (URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | InvocationTargetException ex) {
             Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+
 
     public void getAllMapping(String packagename) throws URISyntaxException{
         String path=packagename.replaceAll("[.]", "/");
@@ -180,8 +235,6 @@ public class FrontServlet extends HttpServlet {
 
 
 
-
-
 /**
  * Retourne la map des urls mappées.
      * @return 
@@ -197,4 +250,33 @@ public class FrontServlet extends HttpServlet {
     public void setMappingUrls(HashMap<String, Mapping> mappingUrls) {
         this.mappingUrls = mappingUrls;
     }
+
+    private Object convertParamValue(String paramValue, Class<?> paramType) throws Exception {
+        if (paramType == String.class) {
+            return paramValue;
+        } else if (paramType == int.class || paramType == Integer.class) {
+            return Integer.parseInt(paramValue);
+        } else if (paramType == boolean.class || paramType == Boolean.class) {
+            return Boolean.parseBoolean(paramValue);
+        }else if (paramType == double.class || paramType == Double.class) {
+            return Double.parseDouble(paramValue);
+       } else if (paramType == Long.class || paramType == long.class) {
+            return Long.parseLong(paramValue);
+        } else if (paramType == Date.class) {
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+            return new java.sql.Date(formatter.parse(paramValue).getTime());
+        }else if (paramType == Timestamp.class) {
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            return new java.sql.Timestamp(formatter.parse(paramValue).getTime());
+           }else if(paramType == Time.class) {
+              SimpleDateFormat formatter = new SimpleDateFormat("HH:mm");
+            return new java.sql.Time(formatter.parse(paramValue).getTime());
+        }else {
+            return null;
+        }
+    }
+
+    //else if (paramType.toString() == "java.sql.Date") {
+      //  return java.sql.Date.valueOf(paramValue);
+    
 }
