@@ -27,11 +27,11 @@ javac -classpath .\fw.jar -d .\temp\WEB-INF\classes .\testframework\src\java\mod
 cd .\temp
 
 @REM rem exporting the temp directory to a war file
-jar cvf ..\testFramework3Sprint5.war *
+jar cvf ..\testFramework4Sprint6.war *
 cd ..
 
 @REM rem deploying the war file to Tomcat
-copy .\testFramework3Sprint5.war "C:\Program Files\Apache Software Foundation\Tomcat 9.0\webapps\"
+copy .\testFramework4Sprint6.war "C:\Program Files\Apache Software Foundation\Tomcat 9.0\webapps\"
 
 @REM rem removing temp directory
 rmdir /s /q .\temp
