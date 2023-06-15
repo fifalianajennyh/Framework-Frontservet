@@ -5,11 +5,11 @@
 package etu2090.framework.model;
 
 import etu2090.framework.annotation.Url;
-public class Dept{
-    @Url(value="getAll")
-    public void maMethode() {
+public class Emp{
+    @Url(value = "getEmp")
+    public void maMethodeEmp() {
         // corps de la méthode
-        System.out.println("ok");
+        System.out.println("mety");
     }
     
 }
