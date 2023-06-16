@@ -15,11 +15,11 @@
 </head>
 <body>
     <h1>FRAMEWORK</h1>
-    <form action="http://localhost:8080/Ma_projet_web_dynamique/test1" method="get">
+    <form action="http://localhost:8080/Ma_projet_web_dynamique/FrontServlet" method="get">
     <p>Entrer votre nom= <input type="text" name="nom"></p>
     <p>Entrer votre age= <input type="number" name="age"></p>
     <input type="submit" value="ok">
     </form>
-    <p><a href ="http://localhost:8080/Ma_projet_web_dynamique/test1?etu=2090">Test1</a></p>
+    <p><a href ="http://localhost:8080/Ma_projet_web_dynamique/FrontServlet?etu=2090">Test1</a></p>
 </body>
 </html>

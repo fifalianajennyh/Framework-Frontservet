@@ -4,10 +4,10 @@
  */
 package etu2090.framework.servlet;
 import etu2090.framework.Mapping;
-import javax.servlet.ServletConfig;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import javax.servlet.*;
+import javax.servlet.http.*;
+// import jakarta.servlet.http.HttpServletRequest;
+// import jakarta.servlet.http.HttpServletResponse;
 import etu2090.framework.annotation.Url;
 import java.io.File;
 import java.io.IOException;
@@ -33,11 +33,11 @@ public class FrontServlet extends HttpServlet {
     /**
      * Initialise la servlet.
      * @param config
-     * @throws javax.servlet.ServletException
+     * @throws ServletException
      */
 
     @Override
-    public void init(ServletConfig config) throws javax.servlet.ServletException {
+    public void init(ServletConfig config) throws ServletException {
         super.init(config);
         
         this.packages=getServletConfig().getInitParameter("modelPackage");
@@ -66,7 +66,7 @@ public class FrontServlet extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws javax.servlet.ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
             try {
                 processRequest(request, response);
@@ -80,7 +80,7 @@ public class FrontServlet extends HttpServlet {
 
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws javax.servlet.ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
             processRequest(request, response);
         } catch (URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
@@ -117,25 +117,6 @@ public class FrontServlet extends HttpServlet {
                 
            }
         }
-
-
-
-        
-        //Class<?> classe = Class.forName("etu2090.framework.Mapping");
-        //Method[] methods = classe.getDeclaredMethods();
-        //for (Method method : methods) {
-        //  if (method.isAnnotationPresent(Url.class)) {
-        //    Url urlAnnotation = method.getAnnotation(Url.class);
-        //Mapping mapping = new Mapping();
-        //mapping.setClassName(urlAnnotation.value());
-        //mapping.setMethod(method.getName());
-        //mappingUrls.put(urlAnnotation.value(), mapping);
-        //}
-        //}
-
-
-
-
 
 
 
