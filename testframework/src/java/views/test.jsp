@@ -16,7 +16,7 @@
 </head>
 <body>
     <h1>AJOUT FORMULAIRE</h1>
-    <form action="Deptsave" method="get">
+    <form action="DeptGetId" method="get">
             <label for = "nom">votre nom</label>
             <input type="text" name="nom" id = "nom" />
             </br></br>
@@ -34,10 +34,13 @@
             <label for = "time">votre heure de naissance</label>
             <input type="time" name="time" id = "time" />
             </br></br>  
-            
-            <label for = "taille">votre taille</label>
-            <input type="number" name="taille" id = "taille" />
+            <label for = "lieu">votre lieu de naissance</label>
+            <input type="text" name="lieu" id = "lieu" />
             </br></br>  
+            <label for = "poids">votre poids</label>
+            <input type="number" name="poids" id = "poids" />
+            </br></br>  
+            
             <input type="submit" value="valider" />
         </form> 
 </body>
