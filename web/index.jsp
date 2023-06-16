@@ -18,7 +18,7 @@
     <form action="http://localhost:8080/Ma_projet_web_dynamique/FrontServlet" method="get">
     <p>Entrer votre nom= <input type="text" name="nom"></p>
     <p>Entrer votre age= <input type="number" name="age"></p>
-    <input type="submit" value="ok">
+    <input type="submit" value="valider">
     </form>
     <p><a href ="http://localhost:8080/Ma_projet_web_dynamique/FrontServlet?etu=2090">Test1</a></p>
 </body>
