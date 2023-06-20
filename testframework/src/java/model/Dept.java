@@ -117,7 +117,7 @@ public class Dept{
         String vString=s+s1;
        ModelView m=new ModelView(vString);
        ArrayList<Dept> olona=new ArrayList<Dept>();
-       Dept user=new Dept(this.getnom(),this.getprenom(),this.getage(),this.getdate(),this.getlieu(),this.getpoids(),this.gettime());
+       Dept user=new Dept(nom,prenom,age,date,lieu,poids,time);
        olona.add(user);
        m.add("val",olona);
         return m;
