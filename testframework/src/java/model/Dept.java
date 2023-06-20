@@ -5,17 +5,12 @@
 package etu2090.framework.model;
 
 import etu2090.framework.annotation.Url;
-import etu2090.framework.FileUpload;
+import etu2090.framework.annotation.Argument;
 import etu2090.framework.ModelViews.ModelView;
 
 import java.sql.Date;
 import java.sql.Time;
 import java.util.ArrayList;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 public class Dept{
     String nom;
@@ -24,14 +19,22 @@ public class Dept{
     Time time;
     Date date;
     double taille;
-    FileUpload file;
+    String lieu;
+    double poids;
 
-     public FileUpload getfile() {
-         return file;
-     }
-     public void setfile(FileUpload file) {
-         this.file = file;
-     }
+
+    public String getlieu() {
+        return lieu;
+    }
+    public void setlieu(String lieu) {
+        this.lieu = lieu;
+    }
+    public double getpoids() {
+        return poids;
+    }
+    public void setpoids(double poids) {
+        this.poids = poids;
+    }
 
     public Date getdate() {
         return date;
@@ -75,16 +78,17 @@ public class Dept{
 
     }
 
-    public Dept(String nom)
+    public Dept(String nom,String prenom,int age,Date daty,String lieu,double poids,Time time)
     {
-        this.setnom(nom);
+         this.setnom(nom);
+         this.setprenom(prenom);
+         this.setage(age);
+         this.setdate(daty);
+         this.setlieu(lieu);
+         this.setpoids(poids);
+         this.settime(time);
     }
-    
-    public Dept(String nom,FileUpload fileUpload)
-    {
-        this.setnom(nom);
-        this.setfile(fileUpload);
-    }
+
     public Dept(String nom,String prenom,int age,Date date,Time time,double taille)
     {
         this.setnom(nom);
@@ -106,44 +110,23 @@ public class Dept{
         return m;
     }
 
-    @Url("Deptsave")
-    public ModelView myMethodDeptsave() {
+    @Url("DeptGetId")
+    public ModelView myMethodId(@Argument("nom") String nom, @Argument("prenom") String prenom,@Argument("age") int age,@Argument("date") Date date,@Argument("lieu") String lieu,@Argument("poids") double poids,@Argument("time") Time time) {
         String s1=".jsp";
         String s="Liste";
         String vString=s+s1;
        ModelView m=new ModelView(vString);
        ArrayList<Dept> olona=new ArrayList<Dept>();
-       Dept user=new Dept(this.getnom(),this.getprenom(),this.getage(),this.getdate(),this.gettime(),this.gettaille());
+       Dept user=new Dept(nom,prenom,age,date,lieu,poids,time);
        olona.add(user);
-       m.add("Liste_personne",olona);
+       m.add("val",olona);
         return m;
     }
     
-    @Url("DeptsaveFile")
-    public ModelView myMethodDeptsaveFile() throws Exception {
-        String s1 = ".jsp";
-        String s = "Liste";
-        String vString = s + s1;
-        ModelView m = new ModelView(vString);
-        ArrayList<Dept> olona = new ArrayList<Dept>();
-    
-        String paramValue = "D:/fichier/test.txt";
-        File file = new File(paramValue);
-    
-        // Vérifiez si le fichier existe
-        if (file.exists()) {
-            byte[] fileBytes = Files.readAllBytes(file.toPath());
-            String fileName = file.getName();
-            FileUpload fileUpload = new FileUpload(fileName, fileBytes,null);
-    
-            Dept user = new Dept(this.getnom(), fileUpload);
-            olona.add(user);
-            m.add("ListeFichier", olona);
-    
-            return m;
-        } else {
-            throw new FileNotFoundException("Le fichier n'existe pas : " + paramValue);
-        }
-    }
-    
 }
+//economie memoire positif singleton
+//sprint8 bis
+//css / fotsin na /* .do na .action   ex @getall.do am fonction findAll
+//filter
+//sprint9
+

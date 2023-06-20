@@ -1,0 +1,132 @@
+protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        PrintWriter out = response.getWriter();
+        try{
+            response.setContentType("text/plain");
+            out.println("URL = " + request.getRequestURI().substring(request.getContextPath().length()));
+            out.println("Method = " + request.getMethod().toString());
+            out.println();
+            Mapping mapping1 = (Mapping)this.getMappingUrls().get(request.getRequestURI().substring(request.getContextPath().length()));
+            if(mapping1!=null){
+                out.println("url====>" + request.getRequestURI().substring(request.getContextPath().length()) + "==== >>>> classe = " + mapping1.getClassName());
+                out.println("url====>" + request.getRequestURI().substring(request.getContextPath().length()) + "==== >>>> method = " + mapping1.getMethod());
+                for (Class<?> class1 : this.getListeClasse()) {
+                    if(class1.getSimpleName().equals(mapping1.getClassName())) 
+                    {
+                        out.println(class1.getSimpleName());
+                        Object object = class1.newInstance();
+                        Map<String, String[]> params = request.getParameterMap();
+                        object = this.makaParametreDonnees(object, params, class1); //maka an'ilay parametre avy any @ JSP
+                        Method[] methods = class1.getDeclaredMethods();
+                        for (Method method : methods) 
+                         {
+                            if(method.getName().equals(mapping1.getMethod())) 
+                              {
+                                out.println(method.getName());
+                                Object[] argument = this.mamenoParametreMethode(method, params);    //mameno parametre an'ilay fonction
+                                ModelView view = null;
+                                if(argument != null)
+                                {
+                                    view = (ModelView)method.invoke(object, argument);
+                                }
+                                else
+                                {
+                                    view = (ModelView)method.invoke(object);
+                                }
+                                out.println("View = " + view.getView());
+                                if(view.getData()!=null)
+                                {
+                                        for (Map.Entry<String, Object> entry : view.getData().entrySet()) 
+                                        {
+                                            String key = entry.getKey();
+                                            Object value = entry.getValue();
+                                            request.setAttribute(key, value);
+                                        }
+                                }
+                                   RequestDispatcher dispatcher = request.getRequestDispatcher("/"+view.getView());
+                                    dispatcher.forward(request, response);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch(Exception io) {
+            out.println("Erreur aki = " + io);
+            io.printStackTrace();
+        }
+    }
+
+    public Object[] mamenoParametreMethode(Method method, Map<String, String[]> params) throws Exception{
+        Object[] arguments = null;
+        if(params.isEmpty()==false){
+            Parameter[] parameters = method.getParameters();
+            if(parameters.length != 0) {
+                arguments = new Object[parameters.length];
+                int i = 0;
+                for (Parameter parameter : parameters) {
+                    for (String paramName : params.keySet()) {
+                        if(paramName.equals(parameter.getAnnotation(Argument.class).name())) {
+                            String[] values = params.get(paramName);
+                            Object reponse = null;
+                            if(values!=null && values.length == 1){
+                                arguments[i] = castValue(parameter.getType(), values[0]);
+                            } 
+                            
+                            else if(values!=null && values.length > 1) {
+                                arguments[i] = liste(parameter.getType(), values);
+                            }  
+                        }   
+                    }
+                    i++;
+                }     
+            }
+        }
+        return arguments;
+    }
+
+    public Object castValue(Class<?> type, String value) throws Exception{
+        if (type == String.class) {
+            return value;
+        } else if (type == Integer.class || type == int.class) {
+            return Integer.parseInt(value);
+        } else if (type == Double.class || type == double.class) {
+            return Double.parseDouble(value);
+        } else if (type == Boolean.class || type == boolean.class) {
+            return Boolean.parseBoolean(value);
+        } else if (type == Long.class || type == long.class) {
+            return Long.parseLong(value);
+        } else if (type.toString() == "java.sql.Date") {
+            return java.sql.Date.valueOf(value);
+        }else if (type == Timestamp.class) {
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            return new java.sql.Timestamp(formatter.parse(value).getTime());
+        }else if(type == Time.class) {
+            SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss");
+            return new java.sql.Time(formatter.parse(value).getTime());
+        }else {
+            return null;
+        }
+    }
+
+    public Object liste(Class<?> type, String[] value){
+        if (type == String.class) {
+            return value;
+        }
+        else if (type == Integer.class || type == int.class) {
+            int[] liste = new int[value.length];
+            for(int i=0; i<value.length; i++) {
+                liste[i] = Integer.parseInt(value[i]);
+            }
+            return liste;
+        }
+        else if (type == Double.class || type == double.class) {
+            double[] liste = new double[value.length];
+            for(int i=0; i<value.length; i++) {
+                liste[i] = Double.parseDouble(value[i]);
+            }
+            return liste;
+        }
+        else {
+            return null;
+        }
+    }
