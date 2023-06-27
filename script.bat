@@ -19,10 +19,10 @@ copy .\testframework\src\java\views\*.jsp .\temp\views
 javac -classpath .\fw.jar -d .\temp\WEB-INF\classes .\testframework\src\java\model\*.java
 cd .\temp
 @REM rem exporting the temp directory to a war file
-jar cvf ..\testFramework5Sprint8mety.war *
+jar cvf ..\testFramework5Sprint9File.war *
 cd ..
 @REM rem deploying the war file to Tomcat
-copy .\testFramework5Sprint8mety.war "C:\Program Files\Apache Software Foundation\Tomcat 9.0\webapps\"
+copy .\testFramework5Sprint9File.war "C:\Program Files\Apache Software Foundation\Tomcat 9.0\webapps\"
 @REM rem removing temp directory
 rmdir /s /q .\temp
 @REM echo Deployment of testFramework.war completed.
