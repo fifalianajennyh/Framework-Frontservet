@@ -1,7 +1,8 @@
 <%@page import="java.util.ArrayList"%>
 <%@page import="etu2090.framework.model.Dept"%>
+<%@page import="etu2090.framework.FileUpload"%>
 <%
-    ArrayList<Dept> listes=(ArrayList<Dept>)request.getAttribute("val");
+    ArrayList<Dept> listes=(ArrayList<Dept>)request.getAttribute("Fichier");
 %>
 <!DOCTYPE html>
 <html lang="en">
@@ -12,10 +13,16 @@
     <title>Bienvenue</title>
 </head>
 <body>
-    <%for(int i=0;i<listes.size();i++) { %>
-        <h1>Bienvenue</h1>
-        <h3><%out.print("vous etes "+listes.get(i).getnom()+" "+listes.get(i).getprenom()+"    , vous etes ne(e) le    " +listes.get(i).getdate()+ "  a "+listes.get(i).getlieu()+"  a "+listes.get(i).gettime());%></h3>
-         <p><%out.print("  Donc vous avez "+listes.get(i).getage()+"  ans, vous pesez"+listes.get(i).getpoids()+" kg");%> </p>
+<% for(int i=0; i<listes.size(); i++) { %>
+    Bienvenue <%= listes.get(i).getnom() %>
+    <% if (listes.get(i).getfile() != null) { %>
+        Nom du fichier : <%= listes.get(i).getfile().getname() %>
+        Nombre de bytes : <%=listes.get(i).getfile().getbyte().length %>
+    <% } else { %>
+        Nom du fichier : Null
+        Nombre de bytes : Null
     <% } %>
+<% } %>
+
 </body>
 </html>
