@@ -3,6 +3,11 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
  */
 package etu2090.framework.servlet;
+<<<<<<< Updated upstream
+=======
+
+import etu2090.framework.FileUpload;
+>>>>>>> Stashed changes
 import etu2090.framework.Mapping;
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServlet;
@@ -38,32 +43,30 @@ import javax.servlet.ServletException;
  */
 public class FrontServlet extends HttpServlet {
 
-   // private static final long serialVersionUID = 1L;
-     HashMap<String, Mapping> mappingUrls=new HashMap <String, Mapping>();
-     String packages;
-     
-     String viewsDirectory;
+    // private static final long serialVersionUID = 1L;
+    HashMap<String, Mapping> mappingUrls = new HashMap<String, Mapping>();
+    String packages;
 
-     public String getViewsDirectory() {
-         return viewsDirectory;
-     }
- 
-     public void setViewsDirectory(String viewsDirectory) {
-         this.viewsDirectory = viewsDirectory;
-     }
+    String viewsDirectory;
 
+    public String getViewsDirectory() {
+        return viewsDirectory;
+    }
 
-     public String makeUpperCaseInitialLetter(String name) {
+    public void setViewsDirectory(String viewsDirectory) {
+        this.viewsDirectory = viewsDirectory;
+    }
+
+    public String makeUpperCaseInitialLetter(String name) {
         if (name == null || name.isEmpty()) {
             return name;
         }
         return Character.toUpperCase(name.charAt(0)) + name.substring(1);
     }
-   
-
 
     /**
      * Initialise la servlet.
+     * 
      * @param config
      * @throws javax.servlet.ServletException
      */
@@ -71,20 +74,19 @@ public class FrontServlet extends HttpServlet {
     @Override
     public void init(ServletConfig config) throws javax.servlet.ServletException {
         super.init(config);
-        
-        this.packages=getServletConfig().getInitParameter("modelPackage");
-     
-         try {
-             this.getAllMapping(this.packages);
-         } catch (URISyntaxException ex) {
-             Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
-         }
-       
-                
+
+        this.packages = getServletConfig().getInitParameter("modelPackage");
+
+        try {
+            this.getAllMapping(this.packages);
+        } catch (URISyntaxException ex) {
+            Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
     }
 
-    
     @SuppressWarnings("empty-statement")
+<<<<<<< Updated upstream
     public void processRequest(HttpServletRequest req, HttpServletResponse resp) throws Exception  {
         PrintWriter out = resp.getWriter();
         String url = req.getRequestURI();
@@ -156,80 +158,184 @@ public class FrontServlet extends HttpServlet {
         }
     }    
      
+=======
+    public void processRequest(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        // IOException, URISyntaxException, ClassNotFoundException,
+        // InstantiationException, IllegalAccessException, InvocationTargetException,
+        // ServletException
+        PrintWriter out = resp.getWriter();
+        String url = req.getRequestURI();
+        String page = url.substring(url.lastIndexOf("/") + 1);
+
+        for (Map.Entry<String, Mapping> entry : this.mappingUrls.entrySet()) {
+            String key = entry.getKey();
+            Mapping mai = entry.getValue();
+
+            /*
+             * out.println("valeur de url    " + key + "     " +
+             * "    Nom de la classe qui a l'annotation       " + mai.getClassName() +
+             * "       " + "      methodes qui a l'annotation  " + mai.getMethod());
+             * out.println(page);
+             * out.println(key);
+             */
+            if (key.compareTo(page) == 0) {
+
+                try {
+                    PrintWriter oPrintWriter = resp.getWriter();
+                    Class<?> class1 = Class.forName(packages + "." + mai.getClassName());
+                    Object object = class1.newInstance();
+                    Method method = object.getClass().getMethod(mai.getMethod());
+
+                    // oPrintWriter.println("test");
+
+                    // recupere les attributs de la classe
+                    Field[] field = object.getClass().getDeclaredFields();
+
+                    // les transformer en tableau de string pour la comparaison
+                    String[] attributs = new String[field.length];
+                    for (int j = 0; j < field.length; j++) {
+                        attributs[j] = field[j].getName();
+                        /*
+                         * oPrintWriter.println("attribut classe");
+                         * oPrintWriter.print(attributs[j]);
+                        */
+                    }
+
+                    // Parcourir tous les paramètres et les valeurs du formulaire
+                    Enumeration<String> paramNames = req.getParameterNames();
+                    while (paramNames.hasMoreElements()) {
+                        String paramName = paramNames.nextElement();
+                        /*
+                         * out.println(paramName);
+                         * out.print("trueeeeee");
+                         */
+
+                        // Verifier si le parametre fait partie des attributs de la classe
+                        for (int j = 0; j < attributs.length; j++) {
+                            if (attributs[j].compareTo(paramName) == 0) {
+                                String[] paramValues = req.getParameterValues(paramName);
+                                Method met = object.getClass().getMethod("set" + attributs[j], field[j].getType());
+                                Object paramValue = convertParamValue(paramValues[0], field[j].getType());
+                                met.invoke(object, paramValue);
+                            }
+
+                        }
+
+                    }
+
+                    /*
+                     * Map<String, String[]> params = req.getParameterMap();
+                     * for(Map.Entry<String, String[]> param : params.entrySet()) {
+                     * Field attr = object.getClass().getField(param.getKey());
+                     * object.getClass().getMethod("set"+this.makeUpperCaseInitialLetter(param.
+                     * getKey()), attr.getType()).invoke(object,
+                     * attr.getType().cast(param.getValue()[0]));
+                     * }
+                    */
+
+                    ModelView view = (ModelView) method.invoke(object , (Object[])null);
+                    String modelString = "views/" + view.getView();
+                    Map<String, Object> data = view.getData();
+                    for (Map.Entry<String, Object> dEntry : view.getData().entrySet()) {
+                        String k = dEntry.getKey();
+                        Object o = dEntry.getValue();
+                        req.setAttribute(k, o);
+                    }
+                    RequestDispatcher dispatcher = req.getRequestDispatcher(modelString);
+                    dispatcher.forward(req, resp);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    e.printStackTrace(out);
+                    // out.println(e.getMessage());
+
+                }
+
+            }
+
+        }
+
+    }
+
+>>>>>>> Stashed changes
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws javax.servlet.ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws javax.servlet.ServletException, IOException {
         try {
             try {
                 processRequest(request, response);
-            }catch(Exception ex){
-           // } catch (InstantiationException | IllegalAccessException | InvocationTargetException ex) {
+            } catch (Exception ex) {
+                // } catch (InstantiationException | IllegalAccessException |
+                // InvocationTargetException ex) {
                 Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
             }
-        }catch(Exception ex){
-        //} catch (URISyntaxException | ClassNotFoundException ex) {
+        } catch (Exception ex) {
+            // } catch (URISyntaxException | ClassNotFoundException ex) {
             Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws javax.servlet.ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws javax.servlet.ServletException, IOException {
         try {
             processRequest(request, response);
-        }catch(Exception ex){
-      //  } catch (URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | InvocationTargetException ex) {
+        } catch (Exception ex) {
+            // } catch (URISyntaxException | ClassNotFoundException | InstantiationException
+            // | IllegalAccessException | InvocationTargetException ex) {
             Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
+<<<<<<< Updated upstream
     public void getAllMapping(String packagename) throws URISyntaxException{
         String path=packagename.replaceAll("[.]", "/");
         URL packageURL=Thread.currentThread().getContextClassLoader().getResource(path);
         File packageDirectory=new File(packageURL.toURI());
         File [] inside=packageDirectory.listFiles();
+=======
+    public void getAllMapping(String packagename) throws URISyntaxException {
+        String path = packagename.replaceAll("[.]", "/");
+        URL packageURL = Thread.currentThread().getContextClassLoader().getResource(path);
+        File packageDirectory = new File(packageURL.toURI());
+        File[] inside = packageDirectory.listFiles();
+>>>>>>> Stashed changes
         for (int i = 0; i < inside.length; i++) {
-                    String [] n=inside[i].getName().split("[.]");
-                    
-                 try{
-                  Class<?> clazz = Class.forName(packagename+"."+n[0]);
-                  for(int j=0;j<clazz.getMethods().length;j++){
-                  if(clazz.getMethods()[j].isAnnotationPresent(Url.class)){
-                    Url u=clazz.getMethods()[j].getAnnotation(Url.class);
-                    String cle=u.value();
-                    String classN=clazz.getSimpleName();
-                    String fonction=clazz.getMethods()[j].getName();
-                    Mapping m=new Mapping(classN,fonction);
-                    this.mappingUrls.put(cle, m);
-                  }
-                  }
-                  
-                  
-                  
-                 }catch (ClassNotFoundException e) {
-                     
+            String[] n = inside[i].getName().split("[.]");
+
+            try {
+                Class<?> clazz = Class.forName(packagename + "." + n[0]);
+                for (int j = 0; j < clazz.getMethods().length; j++) {
+                    if (clazz.getMethods()[j].isAnnotationPresent(Url.class)) {
+                        Url u = clazz.getMethods()[j].getAnnotation(Url.class);
+                        String cle = u.value();
+                        String classN = clazz.getSimpleName();
+                        String fonction = clazz.getMethods()[j].getName();
+                        Mapping m = new Mapping(classN, fonction);
+                        this.mappingUrls.put(cle, m);
+                    }
+                }
+
+            } catch (ClassNotFoundException e) {
+
             }
-                
-           }
+
         }
+    }
 
-
-
-
-
-
-
-/**
- * Retourne la map des urls mappées.
-     * @return 
- */
+    /**
+     * Retourne la map des urls mappées.
+     * 
+     * @return
+     */
     public HashMap<String, Mapping> getMappingUrls() {
         return mappingUrls;
     }
 
-/**
- * Définit la map des urls mappées.
+    /**
+     * Définit la map des urls mappées.
+     * 
      * @param mappingUrls
- */
+     */
     public void setMappingUrls(HashMap<String, Mapping> mappingUrls) {
         this.mappingUrls = mappingUrls;
     }
@@ -255,6 +361,7 @@ public class FrontServlet extends HttpServlet {
            }else if(paramType == Time.class) {
               SimpleDateFormat formatter = new SimpleDateFormat("HH:mm");
             return new java.sql.Time(formatter.parse(paramValue).getTime());
+<<<<<<< Updated upstream
         }else {
             return null;
         }
@@ -342,4 +449,44 @@ public class FrontServlet extends HttpServlet {
     //else if (paramType.toString() == "java.sql.Date") {
       //  return java.sql.Date.valueOf(paramValue);
     
+=======
+        } else if (paramType == FileUpload.class) {
+            // Supposons que le paramètre "paramValue" contienne le chemin du fichier à
+            // uploader
+            File file = new File("D:/fichier/test.txt");
+
+            // Vérifiez si le fichier existe
+            if ( file.exists() ) {
+                try {
+                    // Lisez les octets du fichier
+                    byte[] fileBytes = Files.readAllBytes(Path.of(file.getAbsolutePath()));
+
+                    // Récupérez le nom du fichier
+                    String fileName = file.getName();
+
+                    // Créez une nouvelle instance de FileUpload avec le nom et les octets du
+                    // fichier
+                    FileUpload fileUpload = new FileUpload();
+                    fileUpload.setname(fileName);
+                    fileUpload.setbyte(fileBytes);
+
+                    // Retournez l'instance de FileUpload
+                    return fileUpload;
+                } catch (Exception e) {
+                    // Gérez l'exception d'E/S si elle se produit lors de la lecture des octets du
+                    // fichier
+                    // e.getMessage();
+                    throw new Exception("Erreur lors de la lecture du fichier : " + paramValue);
+                }
+            } else {
+                throw new FileNotFoundException("Le fichier n'existe pas : " + paramValue);
+            }
+        } else {
+            return null;
+        }
+    }
+    // else if (paramType.toString() == "java.sql.Date") {
+    // return java.sql.Date.valueOf(paramValue);
+
+>>>>>>> Stashed changes
 }
