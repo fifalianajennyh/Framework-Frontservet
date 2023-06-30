@@ -9,8 +9,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import etu2090.framework.annotation.Url;
+import etu2090.framework.annotation.scope;
 import etu2090.framework.annotation.Argument;
 import java.lang.reflect.Field;
+import java.lang.reflect.*;
 import etu2090.framework.ModelViews.ModelView;
 import java.io.File;
 import java.util.Enumeration;
@@ -40,9 +42,20 @@ public class FrontServlet extends HttpServlet {
 
    // private static final long serialVersionUID = 1L;
      HashMap<String, Mapping> mappingUrls=new HashMap <String, Mapping>();
+     HashMap<Class<?>, Object> ClasseSingleton=new HashMap <Class<?>, Object>();
      String packages;
-     
+     Mapping mappingObject;
+
      String viewsDirectory;
+
+
+     public Mapping getMappingObject() {
+         return mappingObject;
+     }
+     public void setMappingObject(Mapping mappingObject) {
+         this.mappingObject = mappingObject;
+     }
+
 
      public String getViewsDirectory() {
          return viewsDirectory;
@@ -69,14 +82,15 @@ public class FrontServlet extends HttpServlet {
      */
 
     @Override
-    public void init(ServletConfig config) throws javax.servlet.ServletException {
+    public void init(ServletConfig config) throws javax.servlet.ServletException{
         super.init(config);
         
         this.packages=getServletConfig().getInitParameter("modelPackage");
      
          try {
              this.getAllMapping(this.packages);
-         } catch (URISyntaxException ex) {
+           this.getAllMappingSingleton();
+         } catch (URISyntaxException | InstantiationException | IllegalAccessException | ClassNotFoundException ex) {
              Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
          }
        
@@ -85,56 +99,60 @@ public class FrontServlet extends HttpServlet {
 
     
     @SuppressWarnings("empty-statement")
-    public void processRequest(HttpServletRequest req, HttpServletResponse resp) throws Exception  {
+    public void processRequest(HttpServletRequest req, HttpServletResponse resp) throws Exception {
         PrintWriter out = resp.getWriter();
         String url = req.getRequestURI();
         String page = url.substring(url.lastIndexOf("/") + 1);
-    
+
         for (Map.Entry<String, Mapping> entry : this.mappingUrls.entrySet()) {
             String key = entry.getKey();
             Mapping mai = entry.getValue();
-    
 
-                  // Parcourir tous les paramètres et les valeurs du formulaire
-                  Enumeration<String> paramNames = req.getParameterNames();
-                  while (paramNames.hasMoreElements()) {
-                  String paramName = paramNames.nextElement();
-                    out.println(paramName);
-                  }
+            // Parcourir tous les paramètres et les valeurs du formulaire
+            Enumeration<String> paramNames = req.getParameterNames();
+            while (paramNames.hasMoreElements()) {
+                String paramName = paramNames.nextElement();
+                out.println(paramName);
+            }
 
             if (key.compareTo(page) == 0) {
                 try {
                     PrintWriter oPrintWriter = resp.getWriter();
                     Class<?> class1 = Class.forName(packages + "." + mai.getClassName());
-    
+
                     if (class1.getSimpleName().equals(mai.getClassName())) {
                         out.print(page);
-    //                    out.print("cccccccccccccccccc");
+                        // out.print("cccccccccccccccccc");
                         out.println(class1.getSimpleName());
-      //                  out.print("vvvvvvvvvvvv");
-                        Object object = class1.newInstance();
+                        // out.print("vvvvvvvvvvvv");
+                        Object object =this.SingletonInstances(class1); //class1.getConstructor().newInstance();
                         Map<String, String[]> params = req.getParameterMap();
-                        
-                        object = this.makaParametreDonnees(object, params, class1); // maka an'ilay parametre avy any @ JSP
-                  
+
+                        object = this.makaParametreDonnees(object, params, class1, req, resp); // maka an'ilay parametre
+                                                                                               // avy any @ JSP
+
                         Method[] methods = class1.getDeclaredMethods();
-  //                      out.print("de awn kiiii");
+                        // out.print("de awn kiiii");
                         for (Method method1 : methods) {
                             if (method1.getName().equals(mai.getMethod())) {
                                 out.println(method1.getName());
-                                Object[] arguments = this.mamenoParametreMethode(method1, params); // mameno parametre an'ilay fonction
+
+                                // Object[] arguments = this.mamenoParametreMethode(method1, params); // mameno
+                                // parametre an'ilay fonction
+
+                                Object[] arguments = this.mamenoParametreMethode(method1, params, req, resp);
                                 ModelView view = null;
                                 // out.print("fa awn eeee");
                                 if (arguments != null) {
                                     view = (ModelView) method1.invoke(object, arguments);
-                                    //out.print("mafy enao ee");
+                                    // out.print("mafy enao ee");
                                 } else {
                                     view = (ModelView) method1.invoke(object);
-                                  //  out.print("met zan ee");
+                                    // out.print("met zan ee");
                                 }
-    
+
                                 out.print("View = " + view.getView());
-    
+
                                 if (view.getData() != null) {
                                     for (Map.Entry<String, Object> entry2 : view.getData().entrySet()) {
                                         String key2 = entry2.getKey();
@@ -142,20 +160,25 @@ public class FrontServlet extends HttpServlet {
                                         req.setAttribute(key2, value);
                                     }
                                 }
-    
+
                                 String modelString = "views/" + view.getView();
                                 RequestDispatcher dispatcher = req.getRequestDispatcher(modelString);
                                 dispatcher.forward(req, resp);
+
                             }
                         }
                     }
                 } catch (Exception e) {
-                    out.println(e.getMessage());
+                    // out.println(e.getMessage());
+                    e.printStackTrace(out);
                 }
             }
         }
-    }    
-     
+            
+            
+     }    
+    
+    
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws javax.servlet.ServletException, IOException {
         try {
@@ -181,7 +204,6 @@ public class FrontServlet extends HttpServlet {
             Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
     public void getAllMapping(String packagename) throws URISyntaxException{
         String path=packagename.replaceAll("[.]", "/");
         URL packageURL=Thread.currentThread().getContextClassLoader().getResource(path);
@@ -201,8 +223,9 @@ public class FrontServlet extends HttpServlet {
                     Mapping m=new Mapping(classN,fonction);
                     this.mappingUrls.put(cle, m);
                   }
-                  }
                   
+                 
+                  }
                   
                   
                  }catch (ClassNotFoundException e) {
@@ -212,10 +235,76 @@ public class FrontServlet extends HttpServlet {
            }
         }
 
+//miverifier anle classe we annoter scope ve le izy deny valeur anle annotation singleton 
+    // public void getAllMappingSingleton() throws InstantiationException,IllegalAccessException,ClassNotFoundException, URISyntaxException {
+    //     for(Map.Entry<String,Mapping> entry:this.mappingUrls.entrySet())
+    //     {
+    //         Mapping map=entry.getValue();
+    //         Class<?> classes = Class.forName(packages+ "." + map.getClassName());
+    //             if (classes.isAnnotationPresent(scope.class)) {
+    //                 scope annotation = classes.getAnnotation(scope.class);
+    
+    //                 // Vérifier la valeur de l'annotation "name"
+    //                 if (annotation.name().equals("singleton")) {
+    //                     Object object=classes.newInstance();
+    //                     // Ajouter la classe et l'instance au HashMap
+    //                     this.ClasseSingleton.put(classes, object);
+    //                 }
+    //             }
+    //     }        
+        
+    //     }
 
+         
+    public void getAllMappingSingleton() throws InstantiationException,IllegalAccessException,ClassNotFoundException, URISyntaxException {
+        for(Map.Entry<String,Mapping> entry:this.mappingUrls.entrySet())
+        {
+            Mapping map=entry.getValue();
+            Class<?> classes = Class.forName(packages+ "." + map.getClassName());
+                if (classes.isAnnotationPresent(scope.class)) {
+                    scope annotation = classes.getAnnotation(scope.class);
+                    boolean singleton=annotation.singleton();
+                    // Vérifier la valeur de l'annotation "name"
+                    if (singleton==true) {
+                        Object object=classes.newInstance();
+                        // Ajouter la classe et l'instance au HashMap
+                        this.ClasseSingleton.put(classes, object);
+                    }
+                }
+        }        
+        
+        }
+     public Object SingletonInstances(Class<?> class1) throws InstantiationException,IllegalAccessException,IllegalArgumentException,Exception{
+         for (Map.Entry<Class<?>, Object> entry : this.ClasseSingleton.entrySet()) {
+             Class<?> classe = entry.getKey();
+             Object instance = entry.getValue();
 
-
-
+                     if (class1.equals(classe)) {
+                        System.out.println(classe.getSimpleName()+"ok singleton");
+                        System.out.println(class1.getSimpleName());
+                        this.resetvaluedefault(instance);
+                        return instance;
+                     //   System.out.println("ooooooooooooooooo");
+                    }
+             }
+             return class1.newInstance();
+                    
+     }
+    
+     public void resetvaluedefault(Object object) throws IllegalAccessException,IllegalArgumentException,Exception{
+        Field[] fields=object.getClass().getDeclaredFields();
+        for(Field field:fields)
+        {
+            if (!Modifier.isStatic(field.getModifiers())) {
+                field.setAccessible(true);
+                Class<?> fieldtype=field.getType();
+                Object valeurdefault=defaultvalue(fieldtype);
+                field.set(object,valeurdefault);
+              
+            }
+        }
+        
+     }
 
 
 /**
@@ -234,6 +323,12 @@ public class FrontServlet extends HttpServlet {
         this.mappingUrls = mappingUrls;
     }
 
+    public HashMap<Class<?>, Object> getClasseSingleton() {
+        return ClasseSingleton;
+    }
+    public void setClasseSingleton(HashMap<Class<?>, Object> classeSingleton) {
+        ClasseSingleton = classeSingleton;
+    }
  
     private Object convertParamValue(String paramValue, Class<?> paramType) throws Exception {
         if (paramType == String.class) {
@@ -284,7 +379,7 @@ public class FrontServlet extends HttpServlet {
         }
     }
 
-    public Object[] mamenoParametreMethode(Method method, Map<String, String[]> params) throws Exception{
+    public Object[] mamenoParametreMethode(Method method, Map<String, String[]> params,HttpServletRequest req,HttpServletResponse resp) throws Exception{
         Object[] arguments = null;
         if(params.isEmpty()==false){
             Parameter[] parameters = method.getParameters();
@@ -313,7 +408,7 @@ public class FrontServlet extends HttpServlet {
     }
 
 
-    public Object makaParametreDonnees(Object object, Map<String, String[]> params, Class<?> class1) throws Exception {
+    public Object makaParametreDonnees(Object object, Map<String, String[]> params, Class<?> class1,HttpServletRequest req,HttpServletResponse resp) throws Exception {
         // Obtient tous les champs de la classe
         Field[] fields = class1.getDeclaredFields();
         
@@ -337,9 +432,50 @@ public class FrontServlet extends HttpServlet {
         return object;
     }
     
+    //fonction mi reset ny valeur ny attribut ho lasa valeur par defaut daolo ny valeur an instance reetr
+    private Object defaultvalue(Class<?> paramType) throws Exception {
+        if (paramType == String.class) {
+            return "null";
+        } else if (paramType == int.class || paramType == Integer.class) {
+            return 0;
+        } else if (paramType == boolean.class || paramType == Boolean.class) {
+            return false;
+        }else if (paramType == double.class || paramType == Double.class) {
+            return 0.0;
+        }else {
+            return null;
+        }
+    }
+
+//Sprint 11
+    // private void checkMethod(HttpServletRequest req, ServletConfig servletConfig) {
+    //     Method method = this.getMappingTarget().getMethod();
+    //     if (method.isAnnotationPresent(Auth.class)) {
+    //         String sessionName = servletConfig.getInitParameter("sessionName");
+    //         if (req.getSession().getAttribute(sessionName) != null) {
+    //             String profileName = servletConfig.getInitParameter("sessionProfile");
+    //             String profile = method.getAnnotation(Auth.class).value();
+    //             if (profile.length() > 0) {
+    //                 if (!req.getSession().getAttribute(profileName).equals(profile)) {
+    //                     throw new RuntimeException("Length: " + profile.length());
+    //                 }
+    //             }
+
+    //         } else {
+    //             throw new RuntimeException("You are not allowed to access this page. Session name = " + sessionName);
+    //         }
+    //     }
+    // }
+    //         // checking user authentication
+    //         this.checkMethod(req, servletConfig);
 
 
-    //else if (paramType.toString() == "java.sql.Date") {
-      //  return java.sql.Date.valueOf(paramValue);
+
+    //                 // model sessions
+    //                 Map<String, String> sessions = ((ModelView) result).getSessions();
+    //                 for (Map.Entry<String, String> entry : sessions.entrySet()) {
+    //                     req.getSession().setAttribute(entry.getKey(), entry.getValue());
+    //                 }
     
+   
 }

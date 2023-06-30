@@ -3,18 +3,16 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
  */
 package etu2090.framework.servlet;
-
 import etu2090.framework.Mapping;
-import etu2090.framework.FileUpload;
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.Part;
 import etu2090.framework.annotation.Url;
-//import etu2090.framework.model.Dept;
+import etu2090.framework.annotation.scope;
 import etu2090.framework.annotation.Argument;
 import java.lang.reflect.Field;
+import java.lang.reflect.*;
 import etu2090.framework.ModelViews.ModelView;
 import java.io.File;
 import java.util.Enumeration;
@@ -25,8 +23,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.util.HashMap;
 import java.util.Map;
 import java.sql.*;
@@ -35,63 +31,73 @@ import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.RequestDispatcher;
-import java.io.*;
 import javax.servlet.ServletException;
-import javax.servlet.annotation.MultipartConfig;
 //import model.Dept;
 //import model.Emp;
 
 /**
  * Front Servlet qui gère les requêtes HTTP.
  */
-@MultipartConfig(fileSizeThreshold=1024*1024*10, 	// 10 MB 
-                 maxFileSize=1024*1024*50,      	// 50 MB
-                 maxRequestSize=1024*1024*100) 
-// location="D:/doc"
 public class FrontServlet extends HttpServlet {
 
-    // private static final long serialVersionUID = 1L;
-    HashMap<String, Mapping> mappingUrls = new HashMap<String, Mapping>();
-    String packages;
+   // private static final long serialVersionUID = 1L;
+     HashMap<String, Mapping> mappingUrls=new HashMap <String, Mapping>();
+     HashMap<Class<?>, Object> ClasseSingleton=new HashMap <Class<?>, Object>();
+     String packages;
+     Mapping mappingObject;
 
-    String viewsDirectory;
+     String viewsDirectory;
 
-    public String getViewsDirectory() {
-        return viewsDirectory;
-    }
 
-    public void setViewsDirectory(String viewsDirectory) {
-        this.viewsDirectory = viewsDirectory;
-    }
+     public Mapping getMappingObject() {
+         return mappingObject;
+     }
+     public void setMappingObject(Mapping mappingObject) {
+         this.mappingObject = mappingObject;
+     }
 
-    public String makeUpperCaseInitialLetter(String name) {
+
+     public String getViewsDirectory() {
+         return viewsDirectory;
+     }
+ 
+     public void setViewsDirectory(String viewsDirectory) {
+         this.viewsDirectory = viewsDirectory;
+     }
+
+
+     public String makeUpperCaseInitialLetter(String name) {
         if (name == null || name.isEmpty()) {
             return name;
         }
         return Character.toUpperCase(name.charAt(0)) + name.substring(1);
     }
+   
+
 
     /**
      * Initialise la servlet.
-     * 
      * @param config
      * @throws javax.servlet.ServletException
      */
 
     @Override
-    public void init(ServletConfig config) throws javax.servlet.ServletException {
+    public void init(ServletConfig config) throws javax.servlet.ServletException{
         super.init(config);
-
-        this.packages = getServletConfig().getInitParameter("modelPackage");
-
-        try {
-            this.getAllMapping(this.packages);
-        } catch (URISyntaxException ex) {
-            Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
+        
+        this.packages=getServletConfig().getInitParameter("modelPackage");
+     
+         try {
+             this.getAllMapping(this.packages);
+           this.getAllMappingSingleton();
+         } catch (URISyntaxException | InstantiationException | IllegalAccessException | ClassNotFoundException ex) {
+             Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
+         }
+       
+                
     }
 
+    
     @SuppressWarnings("empty-statement")
     public void processRequest(HttpServletRequest req, HttpServletResponse resp) throws Exception {
         PrintWriter out = resp.getWriter();
@@ -119,7 +125,7 @@ public class FrontServlet extends HttpServlet {
                         // out.print("cccccccccccccccccc");
                         out.println(class1.getSimpleName());
                         // out.print("vvvvvvvvvvvv");
-                        Object object = class1.getConstructor().newInstance();
+                        Object object =this.SingletonInstances(class1); //class1.getConstructor().newInstance();
                         Map<String, String[]> params = req.getParameterMap();
 
                         object = this.makaParametreDonnees(object, params, class1, req, resp); // maka an'ilay parametre
@@ -168,82 +174,162 @@ public class FrontServlet extends HttpServlet {
                 }
             }
         }
-    }
-
+            
+            
+     }    
+    
+    
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws javax.servlet.ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws javax.servlet.ServletException, IOException {
         try {
             try {
                 processRequest(request, response);
-            } catch (Exception ex) {
-                // } catch (InstantiationException | IllegalAccessException |
-                // InvocationTargetException ex) {
+            }catch(Exception ex){
+           // } catch (InstantiationException | IllegalAccessException | InvocationTargetException ex) {
                 Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
             }
-        } catch (Exception ex) {
-            // } catch (URISyntaxException | ClassNotFoundException ex) {
+        }catch(Exception ex){
+        //} catch (URISyntaxException | ClassNotFoundException ex) {
             Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws javax.servlet.ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws javax.servlet.ServletException, IOException {
         try {
             processRequest(request, response);
-        } catch (Exception ex) {
-            // } catch (URISyntaxException | ClassNotFoundException | InstantiationException
-            // | IllegalAccessException | InvocationTargetException ex) {
+        }catch(Exception ex){
+      //  } catch (URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | InvocationTargetException ex) {
             Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
-    public void getAllMapping(String packagename) throws URISyntaxException {
-        String path = packagename.replaceAll("[.]", "/");
-        URL packageURL = Thread.currentThread().getContextClassLoader().getResource(path);
-        File packageDirectory = new File(packageURL.toURI());
-        File[] inside = packageDirectory.listFiles();
+    public void getAllMapping(String packagename) throws URISyntaxException{
+        String path=packagename.replaceAll("[.]", "/");
+        URL packageURL=Thread.currentThread().getContextClassLoader().getResource(path);
+        File packageDirectory=new File(packageURL.toURI());
+        File [] inside=packageDirectory.listFiles();
         for (int i = 0; i < inside.length; i++) {
-            String[] n = inside[i].getName().split("[.]");
+                    String [] n=inside[i].getName().split("[.]");
+                    
+                 try{
+                  Class<?> clazz = Class.forName(packagename+"."+n[0]);
+                  for(int j=0;j<clazz.getMethods().length;j++){
+                  if(clazz.getMethods()[j].isAnnotationPresent(Url.class)){
+                    Url u=clazz.getMethods()[j].getAnnotation(Url.class);
+                    String cle=u.value();
+                    String classN=clazz.getSimpleName();
+                    String fonction=clazz.getMethods()[j].getName();
+                    Mapping m=new Mapping(classN,fonction);
+                    this.mappingUrls.put(cle, m);
+                  }
+                  
+                 
+                  }
+                  
+                  
+                 }catch (ClassNotFoundException e) {
+                     
+            }
+                
+           }
+        }
 
-            try {
-                Class<?> clazz = Class.forName(packagename + "." + n[0]);
-                for (int j = 0; j < clazz.getMethods().length; j++) {
-                    if (clazz.getMethods()[j].isAnnotationPresent(Url.class)) {
-                        Url u = clazz.getMethods()[j].getAnnotation(Url.class);
-                        String cle = u.value();
-                        String classN = clazz.getSimpleName();
-                        String fonction = clazz.getMethods()[j].getName();
-                        Mapping m = new Mapping(classN, fonction);
-                        this.mappingUrls.put(cle, m);
+//miverifier anle classe we annoter scope ve le izy deny valeur anle annotation singleton 
+    // public void getAllMappingSingleton() throws InstantiationException,IllegalAccessException,ClassNotFoundException, URISyntaxException {
+    //     for(Map.Entry<String,Mapping> entry:this.mappingUrls.entrySet())
+    //     {
+    //         Mapping map=entry.getValue();
+    //         Class<?> classes = Class.forName(packages+ "." + map.getClassName());
+    //             if (classes.isAnnotationPresent(scope.class)) {
+    //                 scope annotation = classes.getAnnotation(scope.class);
+    
+    //                 // Vérifier la valeur de l'annotation "name"
+    //                 if (annotation.name().equals("singleton")) {
+    //                     Object object=classes.newInstance();
+    //                     // Ajouter la classe et l'instance au HashMap
+    //                     this.ClasseSingleton.put(classes, object);
+    //                 }
+    //             }
+    //     }        
+        
+    //     }
+
+         
+    public void getAllMappingSingleton() throws InstantiationException,IllegalAccessException,ClassNotFoundException, URISyntaxException {
+        for(Map.Entry<String,Mapping> entry:this.mappingUrls.entrySet())
+        {
+            Mapping map=entry.getValue();
+            Class<?> classes = Class.forName(packages+ "." + map.getClassName());
+                if (classes.isAnnotationPresent(scope.class)) {
+                    scope annotation = classes.getAnnotation(scope.class);
+                    boolean singleton=annotation.singleton();
+                    // Vérifier la valeur de l'annotation "name"
+                    if (singleton==true) {
+                        Object object=classes.newInstance();
+                        // Ajouter la classe et l'instance au HashMap
+                        this.ClasseSingleton.put(classes, object);
                     }
                 }
-            } catch (ClassNotFoundException e) {
-
-            }
-
+        }        
+        
         }
-    }
+     public Object SingletonInstances(Class<?> class1) throws InstantiationException,IllegalAccessException,IllegalArgumentException,Exception{
+         for (Map.Entry<Class<?>, Object> entry : this.ClasseSingleton.entrySet()) {
+             Class<?> classe = entry.getKey();
+             Object instance = entry.getValue();
 
-    /**
-     * Retourne la map des urls mappées.
-     * 
-     * @return
-     */
+                     if (class1.equals(classe)) {
+                        System.out.println(classe.getSimpleName()+"ok singleton");
+                        System.out.println(class1.getSimpleName());
+                        this.resetvaluedefault(instance);
+                        return instance;
+                     //   System.out.println("ooooooooooooooooo");
+                    }
+             }
+             return class1.newInstance();
+                    
+     }
+    
+     public void resetvaluedefault(Object object) throws IllegalAccessException,IllegalArgumentException,Exception{
+        Field[] fields=object.getClass().getDeclaredFields();
+        for(Field field:fields)
+        {
+            if (!Modifier.isStatic(field.getModifiers())) {
+                field.setAccessible(true);
+                Class<?> fieldtype=field.getType();
+                Object valeurdefault=defaultvalue(fieldtype);
+                field.set(object,valeurdefault);
+              
+            }
+        }
+        
+     }
+
+
+/**
+ * Retourne la map des urls mappées.
+     * @return 
+ */
     public HashMap<String, Mapping> getMappingUrls() {
         return mappingUrls;
     }
 
-    /**
-     * Définit la map des urls mappées.
-     * 
+/**
+ * Définit la map des urls mappées.
      * @param mappingUrls
-     */
+ */
     public void setMappingUrls(HashMap<String, Mapping> mappingUrls) {
         this.mappingUrls = mappingUrls;
     }
 
+    public HashMap<Class<?>, Object> getClasseSingleton() {
+        return ClasseSingleton;
+    }
+    public void setClasseSingleton(HashMap<Class<?>, Object> classeSingleton) {
+        ClasseSingleton = classeSingleton;
+    }
+ 
     private Object convertParamValue(String paramValue, Class<?> paramType) throws Exception {
         if (paramType == String.class) {
             return paramValue;
@@ -251,83 +337,81 @@ public class FrontServlet extends HttpServlet {
             return Integer.parseInt(paramValue);
         } else if (paramType == boolean.class || paramType == Boolean.class) {
             return Boolean.parseBoolean(paramValue);
-        } else if (paramType == double.class || paramType == Double.class) {
+        }else if (paramType == double.class || paramType == Double.class) {
             return Double.parseDouble(paramValue);
-        } else if (paramType == Long.class || paramType == long.class) {
+       } else if (paramType == Long.class || paramType == long.class) {
             return Long.parseLong(paramValue);
         } else if (paramType == Date.class) {
             SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
             return new java.sql.Date(formatter.parse(paramValue).getTime());
-        } else if (paramType == Timestamp.class) {
+        }else if (paramType == Timestamp.class) {
             SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             return new java.sql.Timestamp(formatter.parse(paramValue).getTime());
-        } else if (paramType == Time.class) {
-            SimpleDateFormat formatter = new SimpleDateFormat("HH:mm");
+           }else if(paramType == Time.class) {
+              SimpleDateFormat formatter = new SimpleDateFormat("HH:mm");
             return new java.sql.Time(formatter.parse(paramValue).getTime());
-        } else {
+        }else {
             return null;
         }
     }
 
-    public Object liste(Class<?> type, String[] value) {
+
+    public Object liste(Class<?> type, String[] value){
         if (type == String.class) {
             return value;
-        } else if (type == Integer.class || type == int.class) {
+        }
+        else if (type == Integer.class || type == int.class) {
             int[] liste = new int[value.length];
-            for (int i = 0; i < value.length; i++) {
+            for(int i=0; i<value.length; i++) {
                 liste[i] = Integer.parseInt(value[i]);
             }
             return liste;
-        } else if (type == Double.class || type == double.class) {
+        }
+        else if (type == Double.class || type == double.class) {
             double[] liste = new double[value.length];
-            for (int i = 0; i < value.length; i++) {
+            for(int i=0; i<value.length; i++) {
                 liste[i] = Double.parseDouble(value[i]);
             }
             return liste;
-        } else {
+        }
+        else {
             return null;
         }
     }
 
-    public Object[] mamenoParametreMethode(Method method, Map<String, String[]> params, HttpServletRequest req,
-            HttpServletResponse resp) throws Exception {
+    public Object[] mamenoParametreMethode(Method method, Map<String, String[]> params,HttpServletRequest req,HttpServletResponse resp) throws Exception{
         Object[] arguments = null;
-        if (!params.isEmpty()) {
+        if(params.isEmpty()==false){
             Parameter[] parameters = method.getParameters();
-            if (parameters.length != 0) {
+            if(parameters.length != 0) {
                 arguments = new Object[parameters.length];
                 int i = 0;
                 for (Parameter parameter : parameters) {
-                    Argument annotation = parameter.getAnnotation(Argument.class);
-                    if (annotation != null) {
-                        String paramName = annotation.value();
-                        String[] values = params.get(paramName);
-                        if (parameter.getType() == FileUpload.class) {
-                            // this.checkFileUpload(arguments[i], req, resp);
-                            arguments[i] = this.preparefile(paramName, req, resp);
-                          }
-                        else if (values != null && values.length > 0) {
-                            if (parameter.getType().isArray()) {
-                                arguments[i] = liste(parameter.getType().getComponentType(), values);
-                            } else {
-                                    System.out.println(paramName);
-                                    arguments[i] = convertParamValue(values[0], parameter.getType());
-                            }
-                        }
-                        
-                    } 
+                    for (String paramName : params.keySet()) {
+                        if(paramName.equals(parameter.getAnnotation(Argument.class).value())) {
+                            String[] values = params.get(paramName);
+                            Object reponse = null;
+                            if(values!=null && values.length == 1){
+                                arguments[i] = convertParamValue(values[0],parameter.getType());
+                            } 
+                            
+                            else if(values!=null && values.length > 1) {
+                                arguments[i] = liste(parameter.getType(), values);
+                            }  
+                        }   
+                    }
                     i++;
-                }
+                }     
             }
         }
         return arguments;
     }
 
-    public Object makaParametreDonnees(Object object, Map<String, String[]> params, Class<?> class1,
-            HttpServletRequest request, HttpServletResponse response) throws Exception {
+
+    public Object makaParametreDonnees(Object object, Map<String, String[]> params, Class<?> class1,HttpServletRequest req,HttpServletResponse resp) throws Exception {
         // Obtient tous les champs de la classe
         Field[] fields = class1.getDeclaredFields();
-
+        
         for (Field field : fields) {
             // Vérifie si le champ correspond à un paramètre dans le formulaire
             String fieldName = field.getName();
@@ -335,87 +419,63 @@ public class FrontServlet extends HttpServlet {
                 // Obtient la valeur du paramètre du formulaire
                 String[] fieldValues = params.get(fieldName);
                 String fieldValue = fieldValues[0]; // Suppose qu'il y a une seule valeur pour le paramètre
-
+                
                 // Convertit la valeur du paramètre au type approprié
                 Object convertedValue = convertParamValue(fieldValue, field.getType());
-
+                
                 // Définit la valeur du champ dans l'objet
                 field.setAccessible(true);
                 field.set(object, convertedValue);
             }
         }
-        this.checkFileUpload(object, request, response);
-
+        
         return object;
     }
-
-    ////////////////////////////////////////////
-
-    public void checkFileUpload(Object ob, HttpServletRequest request, HttpServletResponse response)
-            throws IOException, ServletException, Exception {
-        Field[] attribut = ob.getClass().getDeclaredFields();
-        Method[] fonction = ob.getClass().getDeclaredMethods();
-        for (int i = 0; i < attribut.length; i++) {
-            if (attribut[i].getType() == FileUpload.class) {
-                for (int j = 0; j < fonction.length; j++) {
-                    if (fonction[j].getName().compareTo("set" + attribut[i].getName()) == 0) {
-                        // System.out.println("hhhhhhhhhhhhhhhh");
-                        FileUpload f = this.preparefile(attribut[i].getName(), request, response);
-                        fonction[j].invoke(ob, f);
-                    }
-                }
-            }
-
-        }
-    }
-
-    public FileUpload preparefile(String file, HttpServletRequest request, HttpServletResponse response)
-            throws IOException, ServletException, Exception {
-        try {
-            FileUpload fichier = new FileUpload();
-            Part filePart = null;
-            // System.out.println(file);
-            java.util.Collection<Part> parts = request.getParts();
-            for (Part p : parts) {
-                if (p.getName().equals(file)) {
-                    filePart = p;
-                    break;
-                }
-            }
-            String submittedFileName = filePart.getSubmittedFileName();
-            fichier.setname(submittedFileName);
-            // System.out.println(submittedFileName);
-            InputStream fileInputStream = filePart.getInputStream();
-            ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
-
-            byte[] buffer = new byte[4096];
-            int bytesRead;
-            while ((bytesRead = fileInputStream.read(buffer)) != -1) {
-                byteOutputStream.write(buffer, 0, bytesRead);
-            }
-
-            byte[] fileBytes = byteOutputStream.toByteArray();
-
-            Byte[] fileBytesWrapper = new Byte[fileBytes.length];
-            for (int i = 0; i < fileBytes.length; i++) {
-                fileBytesWrapper[i] = Byte.valueOf(fileBytes[i]);
-            }
-            fichier.setbyte(fileBytesWrapper);
-            fileInputStream.close();
-            byteOutputStream.close();
-            System.out.println(fichier.getname());
-            System.out.println(fichier.getbyte());
-            return fichier;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            // System.out.println(e.getMessage());
+    
+    //fonction mi reset ny valeur ny attribut ho lasa valeur par defaut daolo ny valeur an instance reetr
+    private Object defaultvalue(Class<?> paramType) throws Exception {
+        if (paramType == String.class) {
+            return "null";
+        } else if (paramType == int.class || paramType == Integer.class) {
+            return 0;
+        } else if (paramType == boolean.class || paramType == Boolean.class) {
+            return false;
+        }else if (paramType == double.class || paramType == Double.class) {
+            return 0.0;
+        }else {
             return null;
         }
-
     }
 
-    // else if (paramType.toString() == "java.sql.Date") {
-    // return java.sql.Date.valueOf(paramValue);
+//Sprint 11
+    // private void checkMethod(HttpServletRequest req, ServletConfig servletConfig) {
+    //     Method method = this.getMappingTarget().getMethod();
+    //     if (method.isAnnotationPresent(Auth.class)) {
+    //         String sessionName = servletConfig.getInitParameter("sessionName");
+    //         if (req.getSession().getAttribute(sessionName) != null) {
+    //             String profileName = servletConfig.getInitParameter("sessionProfile");
+    //             String profile = method.getAnnotation(Auth.class).value();
+    //             if (profile.length() > 0) {
+    //                 if (!req.getSession().getAttribute(profileName).equals(profile)) {
+    //                     throw new RuntimeException("Length: " + profile.length());
+    //                 }
+    //             }
 
+    //         } else {
+    //             throw new RuntimeException("You are not allowed to access this page. Session name = " + sessionName);
+    //         }
+    //     }
+    // }
+    //         // checking user authentication
+    //         this.checkMethod(req, servletConfig);
+
+
+
+    //                 // model sessions
+    //                 Map<String, String> sessions = ((ModelView) result).getSessions();
+    //                 for (Map.Entry<String, String> entry : sessions.entrySet()) {
+    //                     req.getSession().setAttribute(entry.getKey(), entry.getValue());
+    //                 }
+    
+   
 }
