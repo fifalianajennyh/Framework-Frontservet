@@ -7,6 +7,14 @@
             <param-name>modelPackage</param-name>
             <param-value>etu2090.framework.model</param-value>
         </init-param>
+            <init-param>
+            <param-name>connected</param-name>
+            <param-value>isconnected</param-value>
+        </init-param>
+            <init-param>
+            <param-name>profil</param-name>
+            <param-value>profil</param-value>
+        </init-param>
     </servlet>
     <servlet-mapping>
         <servlet-name>FrontServlet</servlet-name>

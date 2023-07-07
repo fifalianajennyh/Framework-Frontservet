@@ -14,8 +14,7 @@
 <body>
     <%for(int i=0;i<listes.size();i++) { %>
         <h1>Bienvenue</h1>
-        <h3><%out.print("vous etes "+listes.get(i).getnom()+" "+listes.get(i).getprenom()+"    , vous etes ne(e) le    " +listes.get(i).getdate()+ "  a "+listes.get(i).getlieu()+"  a "+listes.get(i).gettime());%></h3>
-         <p><%out.print("  Donc vous avez "+listes.get(i).getage()+"  ans, vous pesez"+listes.get(i).getpoids()+" kg");%> </p>
-    <% } %>
+        <h3><%out.print("vous etes "+listes.get(i).getnom()+" "+listes.get(i).getage()+" ans");%></h3>
+    <% } %>    
 </body>
 </html>
