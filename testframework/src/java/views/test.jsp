@@ -16,7 +16,7 @@
 </head>
 <body>
     <h1>Connexion</h1>
-    <form action="getDeptAuthentif" method="get">
+    <form action="json" method="get">
             <label for = "nom">votre nom</label>
             <input type="text" name="nom" id = "nom" />
             </br></br>
