@@ -1,7 +1,9 @@
 <%@page import="java.util.ArrayList"%>
-<%@page import="etu2090.framework.model.Dept"%>
+<%@page import="java.util.HashMap"%>
 <%
-    ArrayList<Dept> listes=(ArrayList<Dept>)request.getAttribute("val");
+  // Récupérer la HashMap de la session
+            HashMap<String, Object> sessions = (HashMap<String, Object>) request.getAttribute("session");
+          
 %>
 <!DOCTYPE html>
 <html lang="en">
@@ -12,9 +14,20 @@
     <title>Bienvenue</title>
 </head>
 <body>
-    <%for(int i=0;i<listes.size();i++) { %>
-        <h1>Bienvenue</h1>
-        <h3><%out.print("vous etes "+listes.get(i).getnom()+" "+listes.get(i).getage()+" ans");%></h3>
-    <% } %>    
+       // Vérifier si la HashMap est vide
+          <%  if (session != null && !sessions.isEmpty()) {
+                // Parcourir les entrées de la HashMap
+                for (String key : sessions.keySet()) {
+                    Object value = sessions.get(key);
+        %>
+                    <p>Clé : <%= key %>, Valeur : <%= value %></p>
+        <%
+                }
+            } else {
+        %>
+                <p>La session est vide.</p>
+        <%
+            }
+        %>
 </body>
 </html>

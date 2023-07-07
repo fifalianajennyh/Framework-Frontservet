@@ -2,5 +2,5 @@
 <%@ page import="java.io.IOException" %>
 
 <%
-   response.sendRedirect("./test.jsp");
+   response.sendRedirect("views/test.jsp");
 %>

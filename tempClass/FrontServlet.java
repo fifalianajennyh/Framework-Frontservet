@@ -278,11 +278,13 @@ public class FrontServlet extends HttpServlet {
       
 
       public void prepareview(HttpServletRequest request, HttpServletResponse response,ModelView v,Method m) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException{
-      //  Annotation[] annotations = m.getAnnotations();
+        System.out.print("lalalalala");
+        //  Annotation[] annotations = m.getAnnotations();
       java.lang.annotation.Annotation[] annotations=m.getAnnotations();  
       for (Annotation annotation:annotations) {
-            System.out.println(annotation);
+            System.out.println("ioioio"+annotation);
         }
+        System.out.print("cocoucou");
         if(m.isAnnotationPresent(Session.class)){
            System.out.println("Nandalo fa session");
          

@@ -26,6 +26,6 @@
             <input type="submit" value="Log In" />
         </form>
 
- <p><a href="Login.jsp">login<a></p> 
+ <p><a href="login">login<a></p> 
 </body>
 </html>
