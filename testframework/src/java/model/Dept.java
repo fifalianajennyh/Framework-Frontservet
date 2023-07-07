@@ -7,13 +7,13 @@ package etu2090.framework.model;
 import etu2090.framework.annotation.Url;
 import etu2090.framework.annotation.scope;
 import etu2090.framework.annotation.Argument;
+import etu2090.framework.annotation.Auth;
 import etu2090.framework.ModelViews.ModelView;
 
 import java.sql.Date;
 import java.sql.Time;
 import java.util.ArrayList;
 
-//@scope(name = "singleton")
 @scope(singleton=true)
 public class Dept{
     String nom;
@@ -102,6 +102,11 @@ public class Dept{
         this.settaille(taille);
     }
 
+    public Dept(String nom,int age)
+    {
+        this.nom=nom;
+        this.age=age;
+    }
     @Url("getAllDept")
     public ModelView myMethodDept() {
         String s1=".jsp";
@@ -113,6 +118,31 @@ public class Dept{
         return m;
     }
 
+    @Auth("")
+    @Url("getDeptTestAuthenf")
+    public ModelView DeptPeuAvoirAcces() {
+        String s1=".jsp";
+        String s="Liste";
+        String vString=s+s1;
+       ModelView m=new ModelView(vString);
+       m.add("test1", "I love you jesus");
+       //m.add("test2", new String[] { "Tableau Mety"});
+        return m;
+    }
+    
+    @Auth("admin")
+    @Url("getDeptAuthentif")
+    public ModelView DeptAdmin(@Argument("nom") String nom,@Argument("age") int age) {
+        String s1=".jsp";
+        String s="Liste";
+        String vString=s+s1;
+       ModelView m=new ModelView(vString);
+       ArrayList<Dept> olona=new ArrayList<Dept>();
+       Dept user=new Dept(nom,age);
+       olona.add(user);
+       m.add("val",olona);
+        return m;
+    }
     @Url("DeptGetId")
     public ModelView myMethodId(@Argument("nom") String nom, @Argument("prenom") String prenom,@Argument("age") int age,@Argument("date") Date date,@Argument("lieu") String lieu,@Argument("poids") double poids,@Argument("time") Time time) {
         String s1=".jsp";
@@ -120,7 +150,7 @@ public class Dept{
         String vString=s+s1;
        ModelView m=new ModelView(vString);
        ArrayList<Dept> olona=new ArrayList<Dept>();
-       Dept user=new Dept(this.getnom(),this.getprenom(),this.getage(),this.getdate(),this.getlieu(),this.getpoids(),this.gettime());
+       Dept user=new Dept(nom,prenom,age,date,lieu,poids,time);
        olona.add(user);
        m.add("val",olona);
         return m;
