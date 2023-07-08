@@ -14,15 +14,15 @@ mkdir .\temp .\temp\WEB-INF .\temp\WEB-INF\classes .\temp\WEB-INF\lib .\temp\vie
 copy .\fw.jar .\temp\WEB-INF\lib\ 
 copy .\testframework\src\java\web.xml .\temp\WEB-INF\
 copy .\testframework\src\java\views\*.jsp .\temp\views
-copy .\testFramework\*.jsp .\temp\
+@REM copy .\testFramework\*.jsp .\temp\
 @REM @REM rem compiling models and other user necessity to the project classes directory
 javac -classpath .\fw.jar -d .\temp\WEB-INF\classes .\testframework\src\java\model\*.java
 cd .\temp
 @REM rem exporting the temp directory to a war file
-jar cvf ..\testFramework6Sprint11.war *
+jar cvf ..\testFramework6Sprint12.war *
 cd ..
 @REM rem deploying the war file to Tomcat
-copy .\testFramework6Sprint11.war "C:\Program Files\Apache Software Foundation\Tomcat 9.0\webapps\"
+copy .\testFramework6Sprint12.war "C:\Program Files\Apache Software Foundation\Tomcat 9.0\webapps\"
 @REM rem removing temp directory
 rmdir /s /q .\temp
 @REM echo Deployment of testFramework.war completed.

@@ -44,6 +44,15 @@ public class Login{
       return v;
    }
    
+   @Url("login")
+   public ModelView login() {
+       String jsp="Login";
+       String point=".jsp";
+       String view=jsp+point;
+       ModelView v=new ModelView(view);
+      return v;
+   }
+   
 }
 //economie memoire positif singleton
 //sprint8 bis

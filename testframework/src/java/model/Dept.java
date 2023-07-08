@@ -8,6 +8,7 @@ import etu2090.framework.annotation.Url;
 import etu2090.framework.annotation.scope;
 import etu2090.framework.annotation.Argument;
 import etu2090.framework.annotation.Auth;
+import etu2090.framework.annotation.Session;
 import etu2090.framework.ModelViews.ModelView;
 
 import java.sql.Date;
@@ -120,6 +121,7 @@ public class Dept{
 
     @Auth("")
     @Url("getDeptTestAuthenf")
+    @Session()
     public ModelView DeptPeuAvoirAcces() {
         String s1=".jsp";
         String s="Liste";
@@ -132,6 +134,7 @@ public class Dept{
     
     @Auth("admin")
     @Url("getDeptAuthentif")
+    @Session()
     public ModelView DeptAdmin(@Argument("nom") String nom,@Argument("age") int age) {
         String s1=".jsp";
         String s="Liste";
