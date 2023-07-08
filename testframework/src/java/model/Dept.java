@@ -8,6 +8,7 @@ import etu2090.framework.annotation.Url;
 import etu2090.framework.annotation.scope;
 import etu2090.framework.annotation.Argument;
 import etu2090.framework.annotation.Auth;
+import etu2090.framework.annotation.Session;
 import etu2090.framework.ModelViews.ModelView;
 
 import java.sql.Date;
@@ -120,6 +121,7 @@ public class Dept{
 
     @Auth("")
     @Url("getDeptTestAuthenf")
+    @Session()
     public ModelView DeptPeuAvoirAcces() {
         String s1=".jsp";
         String s="Liste";
@@ -132,6 +134,7 @@ public class Dept{
     
     @Auth("admin")
     @Url("getDeptAuthentif")
+    @Session()
     public ModelView DeptAdmin(@Argument("nom") String nom,@Argument("age") int age) {
         String s1=".jsp";
         String s="Liste";
@@ -155,7 +158,39 @@ public class Dept{
        m.add("val",olona);
         return m;
     }
+
+    @Url("json")
+    public ModelView getJson(@Argument("nom") String nom,@Argument("age") int age) {
+        String s1=".jsp";
+        String s="Liste";
+        String vString=s+s1;
+       ModelView m=new ModelView(vString);
+       ArrayList<Dept> olona=new ArrayList<Dept>();
+       Dept user=new Dept(nom,age);
+       olona.add(user);
+       m.add("data",olona);
+        return m;
+    }      
     
+   // @ApiRest()
+    @Url("restApi")
+    public Dept getApiRest(){ 
+        Dept c = new Dept();
+        c.setnom("jenny");
+        c.setage(18);
+        return c;
+    } 
+
+    // @Url("logout")
+  /*   public ModelView logout(){
+        ModelView model = new ModelView();
+      //  model.addToRemove("isConnected","profile");
+        // model.setInvalidateSession(true);
+        model.setView("index.jsp");
+        return model;
+    }*/
+   
+
 }
 //economie memoire positif singleton
 //sprint8 bis

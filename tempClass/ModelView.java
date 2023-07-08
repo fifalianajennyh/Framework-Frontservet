@@ -17,7 +17,16 @@ public class ModelView {
     private Map<String, Object> data;
     private Map<String,Object> session=new HashMap<>();
     private Map<String,Object> authenf=new HashMap<>();
-public Map<String, Object> getAuthenf() {
+   boolean isJson;
+
+   public boolean getisJson()
+   {
+      return this.isJson;
+   }
+   public void setJson(boolean isJson) {
+       this.isJson = isJson;
+   }
+    public Map<String, Object> getAuthenf() {
     return authenf;
 }
 public void setAuthenf(Map<String, Object> authenf) {

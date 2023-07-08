@@ -16,7 +16,7 @@
 </head>
 <body>
     <h1>Connexion</h1>
-    <form action="getDeptAuthentif" method="get">
+    <form action="json" method="get">
             <label for = "nom">votre nom</label>
             <input type="text" name="nom" id = "nom" />
             </br></br>
@@ -26,6 +26,6 @@
             <input type="submit" value="Log In" />
         </form>
 
- <p><a href="Login.jsp">login<a></p> 
+ <p><a href="login">login<a></p> 
 </body>
 </html>

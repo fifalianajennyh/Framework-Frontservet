@@ -1,7 +1,7 @@
 <%@page import="java.util.ArrayList"%>
 <%@page import="etu2090.framework.model.Dept"%>
 <%
-    ArrayList<Dept> listes=(ArrayList<Dept>)request.getAttribute("val");
+    ArrayList<Dept> listes=(ArrayList<Dept>)request.getAttribute("data");
 %>
 <!DOCTYPE html>
 <html lang="en">

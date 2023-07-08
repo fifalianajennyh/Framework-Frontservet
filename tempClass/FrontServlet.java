@@ -13,6 +13,9 @@ import etu2090.framework.annotation.Session;
 import etu2090.framework.annotation.Auth;
 import etu2090.framework.annotation.scope;
 import etu2090.framework.annotation.Argument;
+import etu2090.framework.annotation.ApiRest;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import java.lang.reflect.Field;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
@@ -167,10 +170,12 @@ public class FrontServlet extends HttpServlet {
                                     view = (ModelView) method.invoke(object, arguments);
                                     this.preapareSession(req,resp, view);
                                     this.prepareview(req, resp, view, method);
+                                    this.prepareDispatch(req, resp, view);
                                 } else {
                                     view = (ModelView) method.invoke(object);
                                     this.preapareSession(req,resp, view);
                                     this.prepareview(req, resp, view, method);
+                                    this.prepareDispatch(req, resp, view);
                                 }
 
                                 out.print("View = " + view.getView());
@@ -278,11 +283,13 @@ public class FrontServlet extends HttpServlet {
       
 
       public void prepareview(HttpServletRequest request, HttpServletResponse response,ModelView v,Method m) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException{
-      //  Annotation[] annotations = m.getAnnotations();
+        System.out.print("lalalalala");
+        //  Annotation[] annotations = m.getAnnotations();
       java.lang.annotation.Annotation[] annotations=m.getAnnotations();  
       for (Annotation annotation:annotations) {
-            System.out.println(annotation);
+            System.out.println("ioioio"+annotation);
         }
+        System.out.print("cocoucou");
         if(m.isAnnotationPresent(Session.class)){
            System.out.println("Nandalo fa session");
          
@@ -297,6 +304,50 @@ public class FrontServlet extends HttpServlet {
          v.add("session", v.getSession());/* Reuperation du HashMap Session qui contient tous les session */
          //return v ;
        }
+    
+    }
+
+
+
+    //JSON
+    public void prepareDispatch(HttpServletRequest request, HttpServletResponse response,ModelView v) throws ServletException, IOException{
+        if(v.getisJson()==true){
+            for(Map.Entry<String,Object> e: v.getData().entrySet()){
+                            String k=e.getKey();
+                            Object o=e.getValue();
+                            request.setAttribute(k, o);
+            }
+            String chemin="views/"+v.getView();
+            System.out.println(chemin);
+            RequestDispatcher dispat =request.getRequestDispatcher(chemin);
+            dispat.forward(request,response);
+        }else{
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        String json = gson.toJson(v.getData());
+        PrintWriter out = response.getWriter();
+        out.println(json);
+        }
+    }
+    
+    public void checkVerifFonction(HttpServletRequest request, HttpServletResponse response,Map<String,String[]> valeur,Method fonction,Object ob) throws Exception{
+        
+        if(fonction.isAnnotationPresent(ApiRest.class)&& !fonction.getReturnType().equals(Void.TYPE)){
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            if(!valeur.isEmpty()){
+               //  Object obj=this.makaParametreDonnees(ob, valeur, fonction, request,response);
+               Object obj=this.mamenoParametreMethode(fonction, valeur, request, response)   ;
+               String json = gson.toJson(obj);
+                  PrintWriter out = response.getWriter();
+                  out.println(json);
+            }else{
+                Object obj=fonction.invoke(ob);
+                String json = gson.toJson(obj);
+                PrintWriter out = response.getWriter();
+                out.println(json);
+            }
+        }else{
+          throw new Exception("La fonction retourne un Void ou ne Possede pas l'annotation APIrest");
+        }
     
     }
 
