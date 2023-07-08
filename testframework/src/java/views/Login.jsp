@@ -16,16 +16,14 @@
 </head>
 <body>
     <h1>Connexion</h1>
-    <form action="getDeptAuthentif" method="get">
+    <form action="connexion" method="get">
             <label for = "nom">votre nom</label>
             <input type="text" name="nom" id = "nom" />
             </br></br>
-            <label for = "age">votre age </label>
-            <input type="text" name="age" id = "age" />
+            <label for = "mdp">votre password</label>
+            <input type="password" name="mdp" id = "mdp" />
             </br></br>
-            <input type="submit" value="Log In" />
-        </form>
-
- <p><a href="login">login<a></p> 
+            <input type="submit" value="valider" />
+        </form> 
 </body>
 </html>

@@ -9,9 +9,12 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import etu2090.framework.annotation.Url;
+import etu2090.framework.annotation.Session;
+import etu2090.framework.annotation.Auth;
 import etu2090.framework.annotation.scope;
 import etu2090.framework.annotation.Argument;
 import java.lang.reflect.Field;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import etu2090.framework.ModelViews.ModelView;
 import java.io.File;
@@ -32,6 +35,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpSession;
+
 //import model.Dept;
 //import model.Emp;
 
@@ -45,6 +50,9 @@ public class FrontServlet extends HttpServlet {
      HashMap<Class<?>, Object> ClasseSingleton=new HashMap <Class<?>, Object>();
      String packages;
      Mapping mappingObject;
+     String isconnected;
+     String profil;
+
 
      String viewsDirectory;
 
@@ -86,6 +94,8 @@ public class FrontServlet extends HttpServlet {
         super.init(config);
         
         this.packages=getServletConfig().getInitParameter("modelPackage");
+        this.isconnected=getServletConfig().getInitParameter("connected");
+        this.profil=getServletConfig().getInitParameter("profil");
      
          try {
              this.getAllMapping(this.packages);
@@ -97,7 +107,19 @@ public class FrontServlet extends HttpServlet {
                 
     }
 
+
     
+    public Method searchFonction(Object ob,String name) {
+        Method[] methods=ob.getClass().getDeclaredMethods();
+        for (int i = 0; i < methods.length; i++) {
+            if (methods[i].getName().compareTo(name)==0) {
+                return methods[i];
+            }
+            
+        }
+        return null;
+
+    }
     @SuppressWarnings("empty-statement")
     public void processRequest(HttpServletRequest req, HttpServletResponse resp) throws Exception {
         PrintWriter out = resp.getWriter();
@@ -112,7 +134,7 @@ public class FrontServlet extends HttpServlet {
             Enumeration<String> paramNames = req.getParameterNames();
             while (paramNames.hasMoreElements()) {
                 String paramName = paramNames.nextElement();
-                out.println(paramName);
+              //  out.println(paramName);
             }
 
             if (key.compareTo(page) == 0) {
@@ -121,34 +143,34 @@ public class FrontServlet extends HttpServlet {
                     Class<?> class1 = Class.forName(packages + "." + mai.getClassName());
 
                     if (class1.getSimpleName().equals(mai.getClassName())) {
-                        out.print(page);
+                        //out.print(page);
                         // out.print("cccccccccccccccccc");
-                        out.println(class1.getSimpleName());
+                       // out.println(class1.getSimpleName());
                         // out.print("vvvvvvvvvvvv");
                         Object object =this.SingletonInstances(class1); //class1.getConstructor().newInstance();
                         Map<String, String[]> params = req.getParameterMap();
 
                         object = this.makaParametreDonnees(object, params, class1, req, resp); // maka an'ilay parametre
                                                                                                // avy any @ JSP
-
-                        Method[] methods = class1.getDeclaredMethods();
+                        Method method=this.searchFonction(object, mai.getMethod());
+                        this.checkAuthenf(req, resp, method);
+                        //Method[] methods = class1.getDeclaredMethods();
                         // out.print("de awn kiiii");
-                        for (Method method1 : methods) {
-                            if (method1.getName().equals(mai.getMethod())) {
-                                out.println(method1.getName());
-
-                                // Object[] arguments = this.mamenoParametreMethode(method1, params); // mameno
-                                // parametre an'ilay fonction
-
-                                Object[] arguments = this.mamenoParametreMethode(method1, params, req, resp);
+                        //for (Method method1 : methods) {
+                            if (method.getName().equals(mai.getMethod())) {
+     
+                              
+                                Object[] arguments = this.mamenoParametreMethode(method, params, req, resp);
                                 ModelView view = null;
                                 // out.print("fa awn eeee");
                                 if (arguments != null) {
-                                    view = (ModelView) method1.invoke(object, arguments);
-                                    // out.print("mafy enao ee");
+                                    view = (ModelView) method.invoke(object, arguments);
+                                    this.preapareSession(req,resp, view);
+                                    this.prepareview(req, resp, view, method);
                                 } else {
-                                    view = (ModelView) method1.invoke(object);
-                                    // out.print("met zan ee");
+                                    view = (ModelView) method.invoke(object);
+                                    this.preapareSession(req,resp, view);
+                                    this.prepareview(req, resp, view, method);
                                 }
 
                                 out.print("View = " + view.getView());
@@ -162,11 +184,12 @@ public class FrontServlet extends HttpServlet {
                                 }
 
                                 String modelString = "views/" + view.getView();
+                             // String modelString =""  view.getView();
                                 RequestDispatcher dispatcher = req.getRequestDispatcher(modelString);
                                 dispatcher.forward(req, resp);
 
                             }
-                        }
+                        //}
                     }
                 } catch (Exception e) {
                     // out.println(e.getMessage());
@@ -204,6 +227,84 @@ public class FrontServlet extends HttpServlet {
             Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+
+    //sesssion
+   //ref different de 0 de manambotr anle session izy 
+    public void preapareSession(HttpServletRequest request, HttpServletResponse response,ModelView v){
+        HttpSession session = request.getSession();
+        if(v.getAuthenf().size()!=0){
+            System.out.print("ssssssssssssssss");
+             for (Map.Entry<String, Object> entry : v.getAuthenf().entrySet()) {
+                 session.setAttribute(entry.getKey(), entry.getValue());
+                 System.out.println(entry.getKey()+ "   "+entry.getValue());
+             }
+             System.out.println("PROFIL"+session.getAttribute("profil"));
+            
+        }
+
+    
+    
+    }
+
+    //mis auth ve le method verifier connecter ,alaina le session 
+    public void checkAuthenf(HttpServletRequest request, HttpServletResponse response,Method m) throws Exception{
+        //HttpSession session1 = request.getSession();
+        //boolean val=(boolean)session1.getAttribute(this.isconnected);
+        //System.out.print(val);
+        if(m.isAnnotationPresent(Auth.class)){
+         this.verifConnected(request, response);
+          Auth authenf= (Auth) m.getAnnotation(Auth.class);
+          String authen=authenf.value();
+          System.out.println(authen);
+          if(authen.compareTo("")!=0){
+               HttpSession session = request.getSession(false);
+               String profil=(String) session.getAttribute(this.profil);
+               if(profil.compareTo(authen)!=0){
+                   throw new Exception("Accès Refusé");
+               }
+          
+          }
+        }
+    }
+
+   //maka anle session ra null le izy de manao exception izy
+    public void verifConnected(HttpServletRequest request, HttpServletResponse response) throws Exception{
+        HttpSession session = request.getSession(false);
+        if(session.getAttribute(this.isconnected)==null){
+            throw new Exception("Vous etes pas Connecte");
+        }
+      
+      }
+      
+
+      public void prepareview(HttpServletRequest request, HttpServletResponse response,ModelView v,Method m) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException{
+        System.out.print("lalalalala");
+        //  Annotation[] annotations = m.getAnnotations();
+      java.lang.annotation.Annotation[] annotations=m.getAnnotations();  
+      for (Annotation annotation:annotations) {
+            System.out.println("ioioio"+annotation);
+        }
+        System.out.print("cocoucou");
+        if(m.isAnnotationPresent(Session.class)){
+           System.out.println("Nandalo fa session");
+         
+          HttpSession session = request.getSession();
+         Enumeration<String> sessionNames = session.getAttributeNames();
+        
+         while (sessionNames.hasMoreElements()) {
+            String sessionName = sessionNames.nextElement();
+            System.out.println("Nom Session: "+sessionName);
+            v.addSession(sessionName, session.getAttribute(sessionName ));
+        }
+         v.add("session", v.getSession());/* Reuperation du HashMap Session qui contient tous les session */
+         //return v ;
+       }
+    
+    }
+
+
+
+
     public void getAllMapping(String packagename) throws URISyntaxException{
         String path=packagename.replaceAll("[.]", "/");
         URL packageURL=Thread.currentThread().getContextClassLoader().getResource(path);
@@ -300,7 +401,7 @@ public class FrontServlet extends HttpServlet {
                 Class<?> fieldtype=field.getType();
                 Object valeurdefault=defaultvalue(fieldtype);
                 field.set(object,valeurdefault);
-              
+                System.out.println("uuuuuuuuuuuuuuuu");
             }
         }
         

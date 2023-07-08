@@ -15,16 +15,24 @@ public class ModelView {
 
     private String view;
     private Map<String, Object> data;
+    private Map<String,String> sessions;
 
+    public Map<String, String> getSessions() {
+        return sessions;
+    }
+    public void setSessions(Map<String, String> sessions) {
+        this.sessions = sessions;
+    }
     // constructors
     public ModelView(String view) {
         this.setView(view);
         this.setData(new HashMap<>());
     }
 
-    public ModelView(String view, Map<String, Object> data) {
+    public ModelView(String view, Map<String, Object> data,Map<String,String> session) {
         this.setView(view);
         this.setData(data);
+        this.setSessions(session);
     }
 
     // setters

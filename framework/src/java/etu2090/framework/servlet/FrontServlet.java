@@ -300,7 +300,7 @@ public class FrontServlet extends HttpServlet {
                 Class<?> fieldtype=field.getType();
                 Object valeurdefault=defaultvalue(fieldtype);
                 field.set(object,valeurdefault);
-              
+                System.out.println("uuuuuuuuuuuuuuuu");
             }
         }
         
